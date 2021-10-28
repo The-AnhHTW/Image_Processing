@@ -6,28 +6,22 @@
 
 package ip_ws2122;
 
-import java.util.Arrays;
-
 public class Filter {
 
 	public static void outline(RasterImage src, RasterImage dst) {
-		RasterImage imageEroded = src;
 		for (int i = 0; i < src.argb.length; i++) {
 			int currentArgb = src.argb[i];
 			int alpha = (currentArgb >> 24) & 0xff;
-			int red = (currentArgb >> 16) & 0xff;
-			int green = (currentArgb >> 8) & 0xff;
-			int blue = currentArgb & 0xff;
-
-			int x = i % src.width; // % is the "modulo operator", the remainder of i / width;
+			
+			int x = i % src.width; 
 			int y = i / src.width;
 
-			int[] LRTBIndex = { (src.width * (y - 1) + x), (src.width * (y - 1) + x), (src.width * y + (x - 1)),
+			//define the index of the NEIGHBORHOOD (left, right, top, bottom)
+			int[] LRTBIndex = { (src.width * (y - 1) + x), (src.width * (y + 1) + x), (src.width * y + (x - 1)),
 					(src.width * y + (x + 1)) };
 
 			int allBlack = 0;
-			int blackThreshold = 4;
-			
+		
 			for (int index : LRTBIndex) {
 				if (index > 0 && index < src.argb.length) {
 					int neighbourARGB = src.argb[index];
@@ -38,7 +32,7 @@ public class Filter {
 				}
 			}
 
-			if (allBlack == blackThreshold) {
+			if (allBlack == 4) {
 				dst.argb[i] = (alpha << 24) | (0 << 16) | (0 << 8) | 0;
 			} else {
 				dst.argb[i] = (alpha << 24) | (255 << 16) | (255 << 8) | 255;
@@ -76,9 +70,7 @@ public class Filter {
 			} else {
 				inverted[i] = (alpha << 24) | (0 << 16) | (0 << 8) | 0;
 			}
-
 		}
 		return inverted;
 	}
-
 }

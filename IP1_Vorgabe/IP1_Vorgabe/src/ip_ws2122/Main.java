@@ -19,7 +19,7 @@ public class Main extends Application {
 		BorderPane root = (BorderPane)FXMLLoader.load(getClass().getResource("BinarizeView.fxml"));
 		Scene scene = new Scene(root);
 		primaryStage.setScene(scene);
-		primaryStage.setTitle("The-Anh Nguyen, Bach DO Nguyen"); // TODO: add your name(s)
+		primaryStage.setTitle("The-Anh Nguyen, Nguyen Xuan Bach Do "); // TODO: add your name(s)
 		primaryStage.show();
 	}
 	

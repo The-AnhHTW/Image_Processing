@@ -80,20 +80,16 @@ public class RasterImage {
 	// image point operations to be added here
 
 	public void binarizeWithThreshold(int threshold) {
-		// TODO: binarize the image with the given threshold
-		int[] newArr = new int[this.argb.length];
-
 		for (int i = 0; i < this.argb.length; i++) {
 			int currentArgb = this.argb[i];
 			int alpha = (currentArgb >> 24) & 0xff;
 			int red = (currentArgb >> 16) & 0xff;
 			int green = (currentArgb >> 8) & 0xff;
 			int blue = currentArgb & 0xff;
-			int greyScale = (red + green + blue) / 3;
+			int greyScale = (int) (0.299 * red + 0.587 * green + 0.114 * blue);
 			if (greyScale < threshold) {
 				this.argb[i] = (alpha << 24) | (0 << 16) | (0 << 8) | 0;
 			} else {	
-
 				this.argb[i] = (alpha << 24) | (255 << 16) | (255 << 8) | 255;
 			}
 		}
@@ -112,7 +108,6 @@ public class RasterImage {
 	}
 	
 	private int recursiveISOData(int threshold) {
-//		int threshold = 128;
 		double[] probGrey= new double[256];
 		double pA =0;
 		double schwerpunktA = 0;
@@ -126,11 +121,10 @@ public class RasterImage {
 		// get the probablity of greyscale
 		for (int j = 0; j < this.argb.length; j++) {
 			int currentArgb = this.argb[j];
-			int alpha = (currentArgb >> 24) & 0xff;
 			int red = (currentArgb >> 16) & 0xff;
 			int green = (currentArgb >> 8) & 0xff;
 			int blue = currentArgb & 0xff;
-			int greyScale = (red + green + blue) / 3;
+			int greyScale = (int) (0.299 * red + 0.587 * green + 0.114 * blue);
 			probGrey[greyScale]+= 1.0 /  this.argb.length;
 		}
 		
@@ -160,7 +154,6 @@ public class RasterImage {
 		else{
 			newThreshold = recursiveISOData(newThreshold);
 		}
-		System.out.println(newThreshold);
 		return newThreshold;
 	}
 	
