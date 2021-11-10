@@ -166,15 +166,13 @@ public class RasterImage {
 		binarizeWithThreshold(128);
 		int m = 2;
 		for (int i = 0; i < this.argb.length; i++) {
-
 			int currentArgb = this.argb[i];
 			int srcRed = (currentArgb >> 16) & 0xff;
 			int x = i % this.width;
 			int y = i / this.width;
-
-
+			
 			if (srcRed == 0) {
-				Integer[] coordinates = {i, x, y };
+				Integer[] coordinates = { x, y };
 				depthFirstFloodFilling(coordinates, m);
 				m+=10;
 			}
@@ -196,9 +194,9 @@ public class RasterImage {
 				int red = (currentArgb >> 16) & 0xff;
 				int green = (currentArgb >> 8) & 0xff;
 				int blue = currentArgb & 0xff;
-				System.out.println("red: " + red);
-				System.out.println("green: " + green);
-				System.out.println("blue: " + blue);
+//				System.out.println("red: " + red);
+//				System.out.println("green: " + green);
+//				System.out.println("blue: " + blue);
 				if (red == 0) {
 //					System.out.println("red: " + red);
 					int alpha = (this.argb[pos] >> 24) & 0xff;
