@@ -131,10 +131,11 @@ public class BinarizeViewController {
 			threshold = binImg.binarizeWithIsoData();
 			break;
 		case FLOODFILL:
-			threshold = binImg.binarizeWithIsoData();
-			RasterImage floodfillImg = new RasterImage(binImg.width, binImg.height);
-			FloodFill.floodFill(binImg, floodfillImg);
-			floodfillImg.setToView(binarizedImageView);
+//			RasterImage floodFillImg = new RasterImage(binImg.width, binImg.height);
+//			FloodFill.floodFill(binImg);
+//			floodFillImg.setToView(binarizedImageView);
+			binImg.floodFill();
+			break;
 		default:
 			break;
 		}
@@ -142,11 +143,8 @@ public class BinarizeViewController {
 		if (outline.isSelected() && methodeSelection.getValue() != MethodeType.COPY) {
 			RasterImage outlineImg = new RasterImage(binImg.width, binImg.height);
 			Filter.outline(binImg, outlineImg);
-			//outlineImg.setToView(binarizedImageView);
-			
-			RasterImage floodfillImg = new RasterImage(binImg.width, binImg.height);
-			FloodFill.floodFill(outlineImg, floodfillImg);
-			floodfillImg.setToView(binarizedImageView);
+			outlineImg.setToView(binarizedImageView);
+
 			
 			
 		} else {

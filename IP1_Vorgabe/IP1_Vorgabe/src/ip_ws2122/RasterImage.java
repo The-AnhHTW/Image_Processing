@@ -6,8 +6,11 @@
 
 package ip_ws2122;
 
+import java.awt.Color;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Random;
+import java.util.Stack;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -155,6 +158,62 @@ public class RasterImage {
 			newThreshold = recursiveISOData(newThreshold);
 		}
 		return newThreshold;
+	}
+	
+	
+	
+	public void floodFill() {
+		binarizeWithThreshold(128);
+		int m = 2;
+		for (int i = 0; i < this.argb.length; i++) {
+
+			int currentArgb = this.argb[i];
+			int srcRed = (currentArgb >> 16) & 0xff;
+			int x = i % this.width;
+			int y = i / this.width;
+
+
+			if (srcRed == 0) {
+				Integer[] coordinates = {i, x, y };
+				depthFirstFloodFilling(coordinates, m);
+				m+=10;
+			}
+		}
+	}
+
+	private void depthFirstFloodFilling(Integer[] coordinate, int m) {
+		Stack<Integer[]> stack = new Stack<Integer[]>();
+		stack.push(coordinate);
+
+		while (!stack.empty()) {
+			Integer[] coordinates = stack.pop();
+			int x = coordinates[0];
+			int y = coordinates[1];
+			int pos = y * this.width + x;
+			
+			if (pos > 0 && pos < this.argb.length) {
+				int currentArgb = this.argb[pos];
+				int red = (currentArgb >> 16) & 0xff;
+				int green = (currentArgb >> 8) & 0xff;
+				int blue = currentArgb & 0xff;
+				System.out.println("red: " + red);
+				System.out.println("green: " + green);
+				System.out.println("blue: " + blue);
+				if (red == 0) {
+//					System.out.println("red: " + red);
+					int alpha = (this.argb[pos] >> 24) & 0xff;
+					this.argb[pos] = (alpha & 0xff) << 24 | (m+100 & 0xff) << 16 | (m+50 & 0xff) << 8 | (m+150 & 0xff);;
+					stack.push(new Integer[] { x, y - 1 });//
+					stack.push(new Integer[] { x - 1, y + 1 });// war falsch: x-1 y-1
+					stack.push(new Integer[] { x, y + 1 });//
+					stack.push(new Integer[] { x - 1, y + 1 });  //
+					stack.push(new Integer[] { x - 1, y }); //
+					stack.push(new Integer[] { x + 1, y }); //
+					stack.push(new Integer[] { x + 1, y + 1 });// 
+					stack.push(new Integer[] { x - 1, y - 1 }); //
+				}
+			}
+		}
 	}
 	
 
