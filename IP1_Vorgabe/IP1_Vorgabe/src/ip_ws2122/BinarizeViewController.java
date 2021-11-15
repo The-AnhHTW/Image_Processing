@@ -135,7 +135,7 @@ public class BinarizeViewController {
 //			FloodFill.floodFill(binImg);
 //			floodFillImg.setToView(binarizedImageView);
 //			binImg.floodFill();
-			binImg.sequentialLabeling();
+			binImg.sequentialLabeling2();
 			break;
 		default:
 			break;

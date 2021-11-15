@@ -19,7 +19,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
-
+import java.util.stream.IntStream;
+import java.util.Arrays;
+import java.util.Collections;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelFormat;
@@ -200,6 +202,190 @@ public class RasterImage {
 		}
 	}
 
+	public void sequentialLabeling2() {
+		Integer[] color = colors.get(0);
+		HashMap<Integer, Integer> equivalent = new HashMap<Integer,Integer>();
+		for (int i = 0; i < this.argb.length; i++) {
+			int currentArgb = this.argb[i];
+			int srcRed = (currentArgb >> 16) & 0xff;
+			int alpha = (currentArgb >> 24) & 0xff;
+			int x = i % this.width;
+			int y = i / this.width;
+			int pos = y * this.width + x;
+
+			if (srcRed == 0) {
+				List<Integer> allNeighbours = getAllNeighbours2(x, y);
+				boolean allWhite = allNeighbours.stream().allMatch(I -> {
+					int neighbourArgb = this.argb[I];
+					int neighbourRed = (neighbourArgb >> 16) & 0xff;
+					int neighbourGreen = (neighbourArgb >> 8) & 0xff;
+					int neighbourBlue= neighbourArgb & 0xff;
+
+					
+					
+					if (neighbourRed == 255 && neighbourGreen == 255 && neighbourBlue == 255) {return true;}
+					return false;
+				});
+
+				
+				boolean exactlyOne = false;
+				boolean moreThanOne = false;
+				
+				
+				
+				List<int[]> multiLabels = new ArrayList<int[]>();
+				for (int index : allNeighbours) {
+					int neighbourArgb = this.argb[index];
+					int neighbourRed = (neighbourArgb >> 16) & 0xff;
+					if (neighbourRed > 0) {
+						multiLabels.add(new int[] {index,neighbourArgb});
+					}
+				}
+
+				if (multiLabels.size() == 1) {
+					exactlyOne = true;
+				} else if(multiLabels.size() > 0 ){
+					moreThanOne = true;
+				}
+
+				if (allWhite) {
+					this.argb[pos] = (alpha & 0xff) << 24 | (color[0] & 0xff) << 16 | (color[1] & 0xff) << 8
+							| (color[2] & 0xff);
+					colors.add(color);
+					colors.remove(0);
+					color = colors.get(0);
+				} else if (exactlyOne) {
+					this.argb[pos] = multiLabels.get(0)[1];
+				}else if(moreThanOne) {
+					int randomIndex = (int) (Math.random() * (multiLabels.size() - 1 ) + 1);
+					int[] keyValue = multiLabels.get(randomIndex);
+					int k = keyValue[1];
+					int kRed = (k >> 16) & 0xff;
+					this.argb[keyValue[0]] = keyValue[1];
+					for(int[] neighbourKeyValue: multiLabels) {
+						int neighbourArgb = this.argb[neighbourKeyValue[0]];
+						int neighbourRed = (neighbourArgb >> 16) & 0xff;
+						if(neighbourRed!=kRed) {
+							equivalent.put(neighbourArgb, k);
+							}
+					}
+				}
+			}
+			
+		}
+		resolveCollision(equivalent);
+	}
+	
+	
+//	add(new Integer[] { 255, 242, 117 });
+//	add(new Integer[] { 255, 140, 66 });
+//	add(new Integer[] { 255, 60, 56 });
+//
+//	add(new Integer[] { 162, 62, 72 });
+//	add(new Integer[] { 108, 142, 173 });
+//	add(new Integer[] { 74, 111, 165 });
+//
+//	add(new Integer[] { 110, 136, 148 });
+//	add(new Integer[] { 133, 186, 161 });
+//	add(new Integer[] { 206, 237, 219 });
+	
+	private void resolveCollision(HashMap<Integer,Integer> equivalent) {
+		Set<Set<Integer>> R = new HashSet<Set<Integer>>() {
+			{
+				add(new HashSet<Integer>() {{add((1 & 0xff) << 24 | (255 & 0xff) << 16 | (242 & 0xff) << 8| (117 & 0xff));}});
+				add(new HashSet<Integer>() {{add((1 & 0xff) << 24 | (255 & 0xff) << 16 | (140 & 0xff) << 8| (66 & 0xff));}});
+				add(new HashSet<Integer>() {{add((1 & 0xff) << 24 | (255 & 0xff) << 16 | (60 & 0xff) << 8| (56 & 0xff));}});
+				
+				add(new HashSet<Integer>() {{add((1 & 0xff) << 24 | (162 & 0xff) << 16 | (62 & 0xff) << 8| (72 & 0xff));}});
+				add(new HashSet<Integer>() {{add((1 & 0xff) << 24 | (108 & 0xff) << 16 | (142 & 0xff) << 8| (173 & 0xff));}});
+				add(new HashSet<Integer>() {{add((1 & 0xff) << 24 | (74 & 0xff) << 16 | (111 & 0xff) << 8| (165 & 0xff));}});
+				
+				add(new HashSet<Integer>() {{add((1 & 0xff) << 24 | (110 & 0xff) << 16 | (136 & 0xff) << 8| (148 & 0xff));}});
+				add(new HashSet<Integer>() {{add((1 & 0xff) << 24 | (133 & 0xff) << 16 | (186 & 0xff) << 8| (161 & 0xff));}});
+				add(new HashSet<Integer>() {{add((1 & 0xff) << 24 | (206 & 0xff) << 16 | (237 & 0xff) << 8| (219 & 0xff));}});
+			}
+			
+		};
+		
+		for(int key: equivalent.keySet()) {
+			int aArgb= key;
+			int aRed = (aArgb >> 16) & 0xff;
+			int aGreen = (aArgb >> 8) & 0xff;
+			int aBlue = aArgb & 0xff;
+
+			int bArgb =equivalent.get(key);
+			int bRed = (bArgb >> 16) & 0xff;
+			int bGreen = (bArgb >> 8) & 0xff;
+			int bBlue = bArgb & 0xff;
+			
+			Set<Integer> RA = new HashSet();
+			Set<Integer> RB = new HashSet();
+			
+			for(Set<Integer> s:R) {
+				if(s.contains((1 & 0xff) << 24 | (aRed & 0xff) << 16 | (aGreen & 0xff) << 8| (aBlue & 0xff))) {
+					RA = s;
+				}else if(s.contains((1 & 0xff) << 24 | (bRed & 0xff) << 16 | (bGreen & 0xff) << 8| (bBlue & 0xff))){
+					
+					RB = s;
+				};
+			}
+			
+			if(!RA.equals(RB)) {
+				RA.addAll(RB);
+				RB.clear();
+			}
+		}
+
+		for (int i = 0; i < this.argb.length; i++) {
+			int aArgb= this.argb[i];
+			int aRed = (aArgb >> 16) & 0xff;
+			int alpha = (aArgb >> 24) & 0xff;
+			int aGreen = (aArgb >> 8) & 0xff;
+			int aBlue = aArgb & 0xff;
+			int x = i % this.width;
+			int y = i / this.width;
+			int pos = y * this.width + x;
+			if(aRed == 255 && aGreen ==255 && aBlue == 255) {}
+			else if(aRed > 0) {
+				for(Set<Integer> s:R) {
+					if(s.contains((1 & 0xff) << 24 | (aRed & 0xff) << 16 | (aGreen & 0xff) << 8| (aBlue & 0xff))) {
+						int[] array = s.stream().mapToInt(Number::intValue).toArray();
+						int min = IntStream.of(array).min().orElse(Integer.MAX_VALUE);
+						int minRed = (min >> 16) & 0xff;
+						int minGreen = (min >> 8) & 0xff;
+						int minBlue = min & 0xff;
+						
+						this.argb[pos] = (alpha & 0xff) << 24 | (minRed & 0xff) << 16 | (minGreen & 0xff) << 8| (minBlue & 0xff) ;
+					}
+				}
+			}
+		}
+		
+		
+	}
+	
+
+	private List<Integer> getAllNeighbours2(int x, int y) {
+		ArrayList<Integer> neighbourIndexes = new ArrayList<Integer>();
+		neighbourIndexes.add((this.width * (y - 1) + x));
+//		neighbourIndexes.add((this.width * (y + 1) + x));
+		neighbourIndexes.add((this.width * y + (x - 1)));
+//		neighbourIndexes.add((this.width * y + (x + 1)));
+
+//		neighbourIndexes.add((this.width * (y - 1) + (x + 1)));
+//		neighbourIndexes.add((this.width * (y - 1) + (x - 1)));
+//		neighbourIndexes.add((this.width * (y + 1) + (x - 1)));
+//		neighbourIndexes.add((this.width * (y + 1) + (x + 1)));
+
+		for (int i = 0; i < neighbourIndexes.size(); i++) {
+			if (neighbourIndexes.get(i) < 0 || neighbourIndexes.get(i) > this.argb.length) {
+				neighbourIndexes.remove(i);
+			}
+		}
+
+		return neighbourIndexes;
+	}
+
 	public void sequentialLabeling() {
 		Set<int[]> set = new HashSet<int[]>();
 		Integer[] color = colors.get(0);
@@ -231,7 +417,8 @@ public class RasterImage {
 						neighbourLabel = (neighbourAlhpa & 0xff) << 24 | (neighbourRed & 0xff) << 16
 								| (neighbourGreen & 0xff) << 8 | (neighbourBlue & 0xff);
 						coloredNeighbours.put(index, neighbourLabel);
-					};
+					}
+					;
 				} else {
 					neighbourAmount--;
 				}
@@ -250,9 +437,10 @@ public class RasterImage {
 					int specificColor = coloredNeighbours.get(key);
 					int ni = this.argb[key];
 					int k = specificColor;
-					if(ni != k) { 
-						set.add(new int[] {ni, k});
-					}}
+					if (ni != k) {
+						set.add(new int[] { ni, k });
+					}
+				}
 			}
 		}
 	}
