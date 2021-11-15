@@ -134,7 +134,8 @@ public class BinarizeViewController {
 //			RasterImage floodFillImg = new RasterImage(binImg.width, binImg.height);
 //			FloodFill.floodFill(binImg);
 //			floodFillImg.setToView(binarizedImageView);
-			binImg.floodFill();
+//			binImg.floodFill();
+			binImg.sequentialLabeling();
 			break;
 		default:
 			break;
