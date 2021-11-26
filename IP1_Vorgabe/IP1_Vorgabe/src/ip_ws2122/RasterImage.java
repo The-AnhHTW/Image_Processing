@@ -203,7 +203,8 @@ public class RasterImage {
 				int upperIndex = (y+1) * this.width + x;
 				if ((this.argb[leftIndex] >> 16 & 0xff) == 255 && getDistance(x, y, x-1, y)==1) {
 						path.add(coordinates);
-						path.add(new int[]{x-1,y});
+						//get coordinate of underneath
+						path.add(new int[]{x,y-1});
 				} 
 				// überprüfen ob obigen pixel weiß ist
 				else if ((this.argb[upperIndex] >> 16 & 0xff) == 255 && getDistance(x, y, x, y+1)==1) {
