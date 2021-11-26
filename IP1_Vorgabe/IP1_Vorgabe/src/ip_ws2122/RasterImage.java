@@ -195,34 +195,77 @@ public class RasterImage {
 			int x = i % this.width;
 			int y = i / this.width;
 
-			// finde den ersten Vordergrundpixel mit vorgänger
+			// finde den ersten Vordergrundpixel mit vorgï¿½nger
 			if (srcRed == 0 && i != 0 && firstFound) {
 				int[] coordinates = { x, y };
-				// überprüfen ob linke pixel weiß ist
-				int leftIndex = y * this.width + (x - 1);
-				int upperIndex = (y+1) * this.width + x;
-				if ((this.argb[leftIndex] >> 16 & 0xff) == 255 && getDistance(x, y, x-1, y)==1) {
-						path.add(coordinates);
-						//get coordinate of underneath
-						path.add(new int[]{x,y-1});
-				} 
-				// überprüfen ob obigen pixel weiß ist
-				else if ((this.argb[upperIndex] >> 16 & 0xff) == 255 && getDistance(x, y, x, y+1)==1) {
-					path.add(coordinates);
-					path.add(new int[]{x,y+1});
-				}
+				// top x, y+1
+				// bot x, y-1
+				// left x-1, y
+				// right x+1, y
+
+				// ï¿½berprï¿½fen ob linke pixel weiï¿½ ist
+//				int leftIndex = y * this.width + (x - 1);
+//				int upperIndex = (y+1) * this.width + x;
+//				if ((this.argb[leftIndex] >> 16 & 0xff) == 255 && getDistance(x, y, x, y-1)==1) {
+//						path.add(coordinates);
+//						//get coordinate of underneath
+//						path.add(new int[]{x,y-1});
+//				} 
+//				// ï¿½berprï¿½fen ob obigen pixel weiï¿½ ist
+//				else if ((this.argb[upperIndex] >> 16 & 0xff) == 255 && getDistance(x, y, x, y+1)==1) {
+//					path.add(coordinates);
+//					path.add(new int[]{x,y+1});
+//				}
 				firstFound = false;
 			}
 		}
 
 	}
-	
-	 // Methode für die Berechnung der Distanz zwischen zwei Punkten.
-    public static int getDistance(int xP1, int yP1, int xP2, int yP2){
-        return (int) Math.sqrt(Math.pow((xP2 - xP1), 2) + Math.pow((yP2-yP1), 2));
-    }
-	
-	
+
+	public void moveDirection(int currentPixel) {
+		int currentArgb = this.argb[currentPixel];
+		int srcRed = (currentArgb >> 16) & 0xff;
+		int x = currentPixel % this.width;
+		int y = currentPixel / this.width;
+
+		
+		int topPixelLeft = (y + 1) * this.width + (x - 1);
+		int topPixelLeftArgb = this.argb[topPixelLeft];
+		int topPixelLeftRed = (topPixelLeftArgb >> 16) & 0xff;
+
+		int topPixel = (y + 1) * this.width + (x);
+		int topPixelArgb = this.argb[topPixel];
+		int topPixelRed = (currentArgb >> 16) & 0xff;
+
+		int leftPixel = (y) * this.width + (x - 1);
+		int leftPixelArgb = this.argb[leftPixel];
+		int leftPixelRed = (leftPixelArgb >> 16) & 0xff;
+
+		// go-top
+		if (topPixelLeftRed == 0 && topPixel == 255) {
+			System.out.print("Go top");
+		}
+		
+		// go-bottom
+		if (srcRed == 0 && leftPixelRed == 255) {
+			System.out.print("Go bottom");
+		}
+
+		// go-left
+		if (topPixelLeftRed == 255 && leftPixelRed == 0) {
+			System.out.print("Go left");
+		}
+
+		// go-right
+		if (topPixelRed == 0 && srcRed == 255) {
+			System.out.print("Go right");
+		}
+	}
+
+	// Methode fï¿½r die Berechnung der Distanz zwischen zwei Punkten.
+	public static int getDistance(int xP1, int yP1, int xP2, int yP2) {
+		return (int) Math.sqrt(Math.pow((xP2 - xP1), 2) + Math.pow((yP2 - yP1), 2));
+	}
 
 //	public void floodFill(String type) {
 //		for (int i = 0; i < this.argb.length; i++) {
