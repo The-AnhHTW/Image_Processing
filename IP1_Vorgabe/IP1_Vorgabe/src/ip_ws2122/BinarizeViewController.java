@@ -131,16 +131,16 @@ public class BinarizeViewController {
 			threshold = binImg.binarizeWithIsoData();
 			break;
 		case FLOODFILL_BFS:
-			binImg = new RasterImage(origImg);
-			binImg.floodFill("BFS");
+//			binImg = new RasterImage(origImg);
+//			binImg.floodFill("BFS");
 			break;
 		case FLOODFILL_DFS:
-			binImg = new RasterImage(origImg);
-			binImg.floodFill("DFS");
+//			binImg = new RasterImage(origImg);
+//			binImg.floodFill("DFS");
 			break;
 		case FLOODFILL_SL:
-			binImg = new RasterImage(origImg);
-			binImg.sequentialLabeling2();
+//			binImg = new RasterImage(origImg);
+//			binImg.sequentialLabeling2();
 			break;
 		default:
 			break;
