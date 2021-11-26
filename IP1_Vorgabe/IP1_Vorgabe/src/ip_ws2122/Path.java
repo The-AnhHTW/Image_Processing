@@ -1,15 +1,17 @@
 package ip_ws2122;
 
+import java.util.List;
+
 public class Path {
-	private int[][] geschlossenPfad;
+	private List<int[]> geschlossenPfad;
 	private boolean innere;
 	private boolean aussere;
 
-	public int[][] getEckPunkte() {
+	public List<int[]> getEckPunkte() {
 		return geschlossenPfad;
 	}
 
-	public void setEckPunkte(int[][] geschlossenPfad) {
+	public void setEckPunkte(List<int[]> geschlossenPfad) {
 		this.geschlossenPfad = geschlossenPfad;
 	}
 

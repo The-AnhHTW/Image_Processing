@@ -31,6 +31,7 @@ import javafx.scene.image.WritableImage;
 public class RasterImage {
 
 	private static final int gray = 0xffa0a0a0;
+	private String lastMove = "";
 
 	private static List<Integer[]> colors = new ArrayList<Integer[]>() {
 		{
@@ -197,69 +198,149 @@ public class RasterImage {
 
 			// finde den ersten Vordergrundpixel mit vorgï¿½nger
 			if (srcRed == 0 && i != 0 && firstFound) {
-				int[] coordinates = { x, y };
-				// top x, y+1
-				// bot x, y-1
-				// left x-1, y
-				// right x+1, y
-
-				// ï¿½berprï¿½fen ob linke pixel weiï¿½ ist
-//				int leftIndex = y * this.width + (x - 1);
-//				int upperIndex = (y+1) * this.width + x;
-//				if ((this.argb[leftIndex] >> 16 & 0xff) == 255 && getDistance(x, y, x, y-1)==1) {
-//						path.add(coordinates);
-//						//get coordinate of underneath
-//						path.add(new int[]{x,y-1});
-//				} 
-//				// ï¿½berprï¿½fen ob obigen pixel weiï¿½ ist
-//				else if ((this.argb[upperIndex] >> 16 & 0xff) == 255 && getDistance(x, y, x, y+1)==1) {
-//					path.add(coordinates);
-//					path.add(new int[]{x,y+1});
-//				}
 				firstFound = false;
+				int[] coordinates = { x, y };
+				path.add(coordinates);
+				path.add(moveDirection(x, y));
+
+				while (!Arrays.equals(path.get(0), path.get(path.size() - 1))) {
+					int[] currentPixel = path.get(path.size() - 1);
+					int[] possibleEdgePoint = moveDirection(currentPixel[0], currentPixel[1]);
+					if(getDistance(currentPixel[0], currentPixel[1], possibleEdgePoint[0], possibleEdgePoint[1]) == 1) {
+						path.add(possibleEdgePoint);
+					}					
+				}
+				List<Integer> pixelboudaries = new ArrayList<Integer>();
+				//Alle Pixel im Innern invertieren
+				for (int[] obj : path) {
+					pixelboudaries.add(obj[1]*this.width + obj[0]);
+				}
+				Collections.sort(pixelboudaries);
+				int[] range = new int[] {pixelboudaries.get(0), pixelboudaries.get(pixelboudaries.size()-1)};
+				for (int z = range[0]; z <= range[1]; z++) {
+					int currentpixel= this.argb[z];
+					int alpha = (currentpixel >> 24) & 0xff;
+					int color = (currentpixel >> 16) & 0xff;
+					if (color == 255) {
+						this.argb[z] =  (alpha << 24) | (0 << 16) | (0 << 8) | 0;
+					} else if (color == 0) {
+						this.argb[z] =  (alpha << 24) | (255 << 16) | (255 << 8) | 255;
+					}
+				}
+				
+				
 			}
 		}
+//		for (int[] obj : path) {
+//			System.out.println(Arrays.toString(obj));
+//		}
 
 	}
 
-	public void moveDirection(int currentPixel) {
-		int currentArgb = this.argb[currentPixel];
-		int srcRed = (currentArgb >> 16) & 0xff;
-		int x = currentPixel % this.width;
-		int y = currentPixel / this.width;
-
-		
+	private int[] moveDirection(int x, int y) {
+		int pos = y * this.width + x;
+		int srcRed;
+		int topPixelLeftRed;
+		int topPixelRed;
+		int leftPixelRed;
 		int topPixelLeft = (y + 1) * this.width + (x - 1);
-		int topPixelLeftArgb = this.argb[topPixelLeft];
-		int topPixelLeftRed = (topPixelLeftArgb >> 16) & 0xff;
-
 		int topPixel = (y + 1) * this.width + (x);
-		int topPixelArgb = this.argb[topPixel];
-		int topPixelRed = (currentArgb >> 16) & 0xff;
-
 		int leftPixel = (y) * this.width + (x - 1);
-		int leftPixelArgb = this.argb[leftPixel];
-		int leftPixelRed = (leftPixelArgb >> 16) & 0xff;
 
-		// go-top
-		if (topPixelLeftRed == 0 && topPixel == 255) {
-			System.out.print("Go top");
+		// Behandle Rand wie weißen Pixel
+		if (pos > this.argb.length-1 || pos < 0) {
+			srcRed = 255;
+		} else {
+			int currentArgb = this.argb[pos];
+			srcRed = (currentArgb >> 16) & 0xff;
 		}
-		
+
+		if (topPixelLeft > this.argb.length-1 || topPixelLeft < 0) {
+			topPixelLeftRed = 255;
+		} else {
+			int topPixelLeftArgb = this.argb[topPixelLeft];
+			topPixelLeftRed = (topPixelLeftArgb >> 16) & 0xff;
+		}
+		if (topPixel > this.argb.length-1 || topPixel < 0) {
+			topPixelRed = 255;
+		} else {
+			int topPixelArgb = this.argb[topPixel];
+			topPixelRed = (topPixelArgb >> 16) & 0xff;
+		}
+		if (leftPixel > this.argb.length-1 || leftPixel < 0) {
+			leftPixelRed = 255;
+		} else {
+			int leftPixelArgb = this.argb[leftPixel];
+			leftPixelRed = (leftPixelArgb >> 16) & 0xff;
+		}
+
+		// check Abbiegevorschrift immer rechts
+		if (this.lastMove.equals("GoBottom")) {
+			// go-left
+			if (topPixelLeftRed == 255 && leftPixelRed == 0) {
+				lastMove = "GoLeft";
+				System.out.println("Go left");
+				return new int[] { x - 1, y };
+			} else
+				return move(x, y, srcRed, topPixelLeftRed, topPixelRed, leftPixelRed);
+		} else if (this.lastMove.equals("GoRight")) {
+			// go-bottom
+			if (srcRed == 0 && leftPixelRed == 255) {
+				lastMove = "GoBottom";
+				System.out.println("Go bottom");
+				return new int[] { x, y - 1 };
+			} else
+				return move(x, y, srcRed, topPixelLeftRed, topPixelRed, leftPixelRed);
+		} else if (this.lastMove.equals("GoLeft")) {
+			// go-top
+			if (topPixelLeftRed == 0 && topPixelRed == 255) {
+				lastMove = "GoTop";
+				System.out.println("Go top");
+				return new int[] { x, y + 1 };
+			} else
+				return move(x, y, srcRed, topPixelLeftRed, topPixelRed, leftPixelRed);
+		} else if (this.lastMove.equals("GoTop")) {
+			// go-right
+			if (topPixelRed == 0 && srcRed == 255) {
+				lastMove = "GoRight";
+				System.out.println("Go right");
+				return new int[] { x + 1, y };
+			} else
+				return move(x, y, srcRed, topPixelLeftRed, topPixelRed, leftPixelRed);
+		} else {
+			return move(x, y, srcRed, topPixelLeftRed, topPixelRed, leftPixelRed);
+		}
+	}
+
+	private int[] move(int x, int y, int srcRed, int topPixelLeftRed, int topPixelRed, int leftPixelRed) {
+		// go-top
+		if (topPixelLeftRed == 0 && topPixelRed == 255) {
+			lastMove = "GoTop";
+			System.out.println("Go top");
+			return new int[] { x, y + 1 };
+		}
+
 		// go-bottom
 		if (srcRed == 0 && leftPixelRed == 255) {
-			System.out.print("Go bottom");
+			lastMove = "GoBottom";
+			System.out.println("Go bottom");
+			return new int[] { x, y - 1 };
 		}
 
 		// go-left
 		if (topPixelLeftRed == 255 && leftPixelRed == 0) {
-			System.out.print("Go left");
+			lastMove = "GoLeft";
+			System.out.println("Go left");
+			return new int[] { x - 1, y };
 		}
 
 		// go-right
 		if (topPixelRed == 0 && srcRed == 255) {
-			System.out.print("Go right");
+			lastMove = "GoRight";
+			System.out.println("Go right");
+			return new int[] { x + 1, y };
 		}
+		return new int[] { 0, 0 };
 	}
 
 	// Methode fï¿½r die Berechnung der Distanz zwischen zwei Punkten.

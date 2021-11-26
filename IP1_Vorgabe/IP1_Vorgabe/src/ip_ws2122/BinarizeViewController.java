@@ -21,8 +21,8 @@ import javafx.stage.FileChooser;
 public class BinarizeViewController {
 
 	public enum MethodeType {
-		COPY("Copy Image"), THRESHOLD("Threshold"), ISODATA("ISO Data"), FLOODFILL_DFS("Floodfill DFS"), FLOODFILL_BFS("Floodfill BFS"), FLOODFILL_SL("Floodfill SL");
-
+		//COPY("Copy Image"), THRESHOLD("Threshold"), ISODATA("ISO Data"), FLOODFILL_DFS("Floodfill DFS"), FLOODFILL_BFS("Floodfill BFS"), FLOODFILL_SL("Floodfill SL");
+		COPY("Copy Image"), THRESHOLD("Threshold"), ISODATA("ISO Data"), CONTOUR("Contour");
 		private final String name;
 
 		private MethodeType(String s) {
@@ -130,18 +130,18 @@ public class BinarizeViewController {
 		case ISODATA:	
 			threshold = binImg.binarizeWithIsoData();
 			break;
-		case FLOODFILL_BFS:
-//			binImg = new RasterImage(origImg);
-//			binImg.floodFill("BFS");
+		case CONTOUR:
+			binImg = new RasterImage(origImg);
+			binImg.findContour();
 			break;
-		case FLOODFILL_DFS:
+//		case FLOODFILL_DFS:
 //			binImg = new RasterImage(origImg);
 //			binImg.floodFill("DFS");
-			break;
-		case FLOODFILL_SL:
+//			break;
+//		case FLOODFILL_SL:
 //			binImg = new RasterImage(origImg);
 //			binImg.sequentialLabeling2();
-			break;
+//			break;
 		default:
 			break;
 		}
