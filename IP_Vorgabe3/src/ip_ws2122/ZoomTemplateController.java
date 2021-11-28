@@ -110,36 +110,23 @@ public class ZoomTemplateController {
 		double zoomedHeight = Math.ceil(zoom * image.height);
 		overlayCanvas.setWidth(zoomedWidth);
     	overlayCanvas.setHeight(zoomedHeight);
-    	
-//    	GraphicsContext gc = overlayCanvas.getGraphicsContext2D();
-//    	gc.clearRect(0, 0, zoomedWidth, zoomedHeight);
-//    	
-//    	gc.setStroke(Color.RED);
-//    	gc.beginPath();
-//    	gc.moveTo(0, 0);
-//    	gc.lineTo(zoomedWidth, zoomedHeight);
-//    	gc.lineTo(0, zoomedHeight);
-//    	gc.lineTo(zoomedWidth, 0);
-//    	gc.lineTo(0, 0);
-//    	gc.stroke();
+		GraphicsContext gc = overlayCanvas.getGraphicsContext2D();
+    	gc.clearRect(0, 0, zoomedWidth, zoomedHeight);
 		if (paths != null) {
-			GraphicsContext gc = overlayCanvas.getGraphicsContext2D();
-	    	gc.clearRect(0, 0, zoomedWidth, zoomedHeight);
+	
 			for (Path p : paths) {
 				List<int[]> coordinate = p.getEckPunkte();
 
 				if (p.isAussere()) {
-					System.out.println("paint is red");
 					gc.setStroke(Color.RED);
 				} else {
-					System.out.println("paint is yellow");
 					gc.setStroke(Color.YELLOW);
 				}
 					gc.beginPath();
-					gc.moveTo(coordinate.get(0)[0], coordinate.get(0)[1]);
+					gc.moveTo(coordinate.get(0)[0] * zoom, coordinate.get(0)[1]*zoom);
 					for (int i = 1; i< coordinate.size(); i++) {
 						int[] current = coordinate.get(i);
-				    	gc.lineTo(current[0] , current[1]);
+				    	gc.lineTo(current[0] *zoom , current[1] * zoom);
 						gc.stroke();
 					}
 		}}
