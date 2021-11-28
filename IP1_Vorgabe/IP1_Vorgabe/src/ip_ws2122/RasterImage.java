@@ -32,8 +32,8 @@ public class RasterImage {
 
 	private static final int gray = 0xffa0a0a0;
 	private String lastMove = "";
-	private static List<List<int[]>> pathList = new ArrayList<List<int[]>>();
-	private static List<String> typeOfPaths = new ArrayList<String>();
+	private static List<Path> pathList = new ArrayList<Path>();
+//	private static List<String> typeOfPaths = new ArrayList<String>();
 
 	private static List<Integer[]> colors = new ArrayList<Integer[]>() {
 		{
@@ -52,6 +52,7 @@ public class RasterImage {
 	};
 
 	public int[] argb; // pixels represented as ARGB values in scanline order
+	public int[] originalArgb;
 	public int width; // image width in pixels
 	public int height; // image height in pixels
 	public List<Integer> deptSizes = new ArrayList<Integer>();
@@ -62,6 +63,8 @@ public class RasterImage {
 		this.height = height;
 		argb = new int[width * height];
 		Arrays.fill(argb, gray);
+	
+
 	}
 
 	public RasterImage(RasterImage image) {
@@ -69,6 +72,7 @@ public class RasterImage {
 		width = image.width;
 		height = image.height;
 		argb = image.argb.clone();
+		this.originalArgb = argb.clone();
 	}
 
 	public RasterImage(File file) {
@@ -189,7 +193,7 @@ public class RasterImage {
 		return newThreshold;
 	}
 
-	public void findContour(String type) {
+	public void findContour() {
 		List<int[]> path = new ArrayList<int[]>();
 		boolean firstFound = true;
 		for (int i = 0; i < this.argb.length; i++) {
@@ -205,43 +209,90 @@ public class RasterImage {
 				path.add(coordinates);
 				path.add(moveDirection(x, y));
 
+				// find path
 				while (!Arrays.equals(path.get(0), path.get(path.size() - 1))) {
+				
 					int[] currentPixel = path.get(path.size() - 1);
+					System.out.println(currentPixel[0] + " | " +  currentPixel[1]);
 					int[] possibleEdgePoint = moveDirection(currentPixel[0], currentPixel[1]);
-					if(getDistance(currentPixel[0], currentPixel[1], possibleEdgePoint[0], possibleEdgePoint[1]) == 1) {
+					if (getDistance(currentPixel[0], currentPixel[1], possibleEdgePoint[0],
+							possibleEdgePoint[1]) == 1) {
 						path.add(possibleEdgePoint);
-					}					
+					}
+				
+				}
+			
+				//define dataType for path;
+				Path newPath;
+				int pixelToCheckY= path.get(0)[1];
+				int pixelToCheckX = path.get(0)[0];
+				//getLeft
+				int posToCheck = pixelToCheckY * this.width + (pixelToCheckX -1);
+				int colorOfPixel;
+				if(posToCheck <0 || posToCheck > this.argb.length) {
+					colorOfPixel = 255;
+				} else {
+					colorOfPixel = (this.originalArgb[posToCheck] >> 16) & 0xff;
+				}
+			
+				if (colorOfPixel == 255) {
+					//path is outer contour
+					 newPath = new Path(path,false,true);
+				} else {
+					//path is inner contour
+					 newPath = new Path(path,true,false);
 				}
 				
-				for(int j=0; j < path.size(); i++) {
+				pathList.add(newPath);
+				
+
+				// Innere Pixels invertieren
+				List<int[]> pathToInvert = pathList.get(pathList.size() - 1).getEckPunkte();
+				for (int j = 0; j < pathToInvert.size(); j++) {
 					int[] current = path.get(j);
 					int[] next;
-					
-					if(j == path.size()) {
+
+					if (j == path.size() - 1) {
 						break;
-					}else {
-						next = path.get(j+1);
+					} else {
+						next = path.get(j + 1);
 					}
-					
-					if(next[1] != current[1]) {
-						for(int l=current[0]; l <= this.width; l++) {
-							int index = (current[1])* this.width + l;
-							int rowArgb = this.argb[index];
-							int red = (rowArgb >> 16) & 0xff;
-							int alpha = (rowArgb>> 24) & 0xff;
-							int color =  red== 255 ? 0: 255;
-							this.argb[index] =  (alpha << 24) | (color << 16) | (color << 8) | color;
+
+					if (next[1] != current[1]) {
+						int[] pointer;
+						//check if gobottom
+						if (next[1] > current[1]) {
+							pointer = current.clone();
+						} else {
+							pointer = next.clone();
+						}
+						
+						
+						for (int l = pointer[0]; l < this.width; l++) {
+							
+							int index = (pointer[1]) * this.width + l;
+							if (index > 0 && index < this.argb.length) {
+								int rowArgb = this.argb[index];
+								int red = (rowArgb >> 16) & 0xff;
+								int alpha = (rowArgb >> 24) & 0xff;
+								int color = red == 255 ? 0 : 255;
+								this.argb[index] = (alpha << 24) | (color << 16) | (color << 8) | color;
+							}
 						}
 					}
-					
 				}
-				pathList.add(path);
-				typeOfPaths.add(type);
-				if(type == "outer") {
-					this.findContour("inner");
-				}
-				
-				
+//					for(int a : this.argb) {
+//						int color= (a >> 16) & 0xff;
+//						System.out.println(color);
+//					}
+				findContour();
+
+//				pathList.add(path);
+//				typeOfPaths.add(type);
+//				if(type == "outer") {
+//					this.findContour("inner");
+//				}
+
 //				List<Integer> pixelboudaries = new ArrayList<Integer>();
 //				//Alle Pixel im Innern invertieren
 //				for (int[] obj : path) {
@@ -260,7 +311,7 @@ public class RasterImage {
 //					}
 //				}
 //				
-				
+
 			}
 		}
 //		for (int[] obj : path) {
@@ -269,14 +320,25 @@ public class RasterImage {
 
 	}
 
+	public void setPathDatatype() {
+		for (Path path : pathList) {
+				for (int[] i : path.getEckPunkte()) {
+						int pos = i[1] * this.width + i[0];
+						int alpha = (this.argb[pos] >> 24) & 0xff;
+						this.argb[pos] =  (alpha << 24) | (0 << 16) | (0 << 8) | 0;
+				}
+			
+		}
+	}
+
 	private int[] moveDirection(int x, int y) {
 		int pos = y * this.width + x;
 		int srcRed;
 		int topPixelLeftRed;
 		int topPixelRed;
 		int leftPixelRed;
-		int topPixelLeft = (y + 1) * this.width + (x - 1);
-		int topPixel = (y + 1) * this.width + (x);
+		int topPixelLeft = (y - 1) * this.width + (x - 1);
+		int topPixel = (y - 1) * this.width + (x);
 		int leftPixel = (y) * this.width + (x - 1);
 
 		// Behandle Rand wie wei�en Pixel
@@ -311,7 +373,7 @@ public class RasterImage {
 			// go-left
 			if (topPixelLeftRed == 255 && leftPixelRed == 0) {
 				lastMove = "GoLeft";
-				System.out.println("Go left");
+				 System.out.println("Go left");
 				return new int[] { x - 1, y };
 			} else
 				return move(x, y, srcRed, topPixelLeftRed, topPixelRed, leftPixelRed);
@@ -320,7 +382,7 @@ public class RasterImage {
 			if (srcRed == 0 && leftPixelRed == 255) {
 				lastMove = "GoBottom";
 				System.out.println("Go bottom");
-				return new int[] { x, y - 1 };
+				return new int[] { x, y + 1 };
 			} else
 				return move(x, y, srcRed, topPixelLeftRed, topPixelRed, leftPixelRed);
 		} else if (this.lastMove.equals("GoLeft")) {
@@ -328,7 +390,7 @@ public class RasterImage {
 			if (topPixelLeftRed == 0 && topPixelRed == 255) {
 				lastMove = "GoTop";
 				System.out.println("Go top");
-				return new int[] { x, y + 1 };
+				return new int[] { x, y - 1 };
 			} else
 				return move(x, y, srcRed, topPixelLeftRed, topPixelRed, leftPixelRed);
 		} else if (this.lastMove.equals("GoTop")) {
@@ -349,14 +411,14 @@ public class RasterImage {
 		if (topPixelLeftRed == 0 && topPixelRed == 255) {
 			lastMove = "GoTop";
 			System.out.println("Go top");
-			return new int[] { x, y + 1 };
+			return new int[] { x, y - 1 };
 		}
 
 		// go-bottom
 		if (srcRed == 0 && leftPixelRed == 255) {
 			lastMove = "GoBottom";
 			System.out.println("Go bottom");
-			return new int[] { x, y - 1 };
+			return new int[] { x, y + 1 };
 		}
 
 		// go-left

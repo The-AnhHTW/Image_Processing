@@ -7,6 +7,13 @@ public class Path {
 	private boolean innere;
 	private boolean aussere;
 
+	public Path (List<int[]> path, boolean innere, boolean aussere) {
+		this.geschlossenPfad = path;
+		this.aussere = aussere;
+		this.innere = innere;
+	}
+	
+	
 	public List<int[]> getEckPunkte() {
 		return geschlossenPfad;
 	}
