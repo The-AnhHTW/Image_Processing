@@ -69,6 +69,7 @@ public class ZoomTemplateController {
 			fileOpenPath = selectedFile.getParentFile();
 			image = new RasterImage(selectedFile);
 			image.setToView(imageView);
+			paths.clear();
 			resetZoom();
 			processImage();
 		}
@@ -94,11 +95,10 @@ public class ZoomTemplateController {
 	}
 
 	private void processImage() {
-		// TODO: implement image analysis here
-
 		RasterImage origImg = new RasterImage(imageView);
 		RasterImage binImg = new RasterImage(origImg); // create a clone of origImg
 		binImg.findContour();
+
 		paths = binImg.getPath();
 		origImg.setToView(imageView);
 		// draw results into overlay
@@ -111,7 +111,7 @@ public class ZoomTemplateController {
 		overlayCanvas.setWidth(zoomedWidth);
     	overlayCanvas.setHeight(zoomedHeight);
 		GraphicsContext gc = overlayCanvas.getGraphicsContext2D();
-    	gc.clearRect(0, 0, zoomedWidth, zoomedHeight);
+		gc.clearRect(0, 0, overlayCanvas.getWidth(), overlayCanvas.getHeight());
 		if (paths != null) {
 	
 			for (Path p : paths) {

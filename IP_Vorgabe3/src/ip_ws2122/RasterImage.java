@@ -105,7 +105,7 @@ public class RasterImage {
 				while (!Arrays.equals(path.get(0), path.get(path.size() - 1))) {
 				
 					int[] currentPixel = path.get(path.size() - 1);
-					System.out.println(currentPixel[0] + " | " +  currentPixel[1]);
+//					System.out.println(currentPixel[0] + " | " +  currentPixel[1]);
 					int[] possibleEdgePoint = moveDirection(currentPixel[0], currentPixel[1]);
 					if (getDistance(currentPixel[0], currentPixel[1], possibleEdgePoint[0],
 							possibleEdgePoint[1]) == 1) {
@@ -173,54 +173,12 @@ public class RasterImage {
 						}
 					}
 				}
-//					for(int a : this.argb) {
-//						int color= (a >> 16) & 0xff;
-//						System.out.println(color);
-//					}
 				findContour();
-
-//				pathList.add(path);
-//				typeOfPaths.add(type);
-//				if(type == "outer") {
-//					this.findContour("inner");
-//				}
-
-//				List<Integer> pixelboudaries = new ArrayList<Integer>();
-//				//Alle Pixel im Innern invertieren
-//				for (int[] obj : path) {
-//					pixelboudaries.add(obj[1]*this.width + obj[0]);
-//				}
-//				Collections.sort(pixelboudaries);
-//				int[] range = new int[] {pixelboudaries.get(0), pixelboudaries.get(pixelboudaries.size()-1)};
-//				for (int z = range[0]; z <= range[1]; z++) {
-//					int currentpixel= this.argb[z];
-//					int alpha = (currentpixel >> 24) & 0xff;
-//					int color = (currentpixel >> 16) & 0xff;
-//					if (color == 255) {
-//						this.argb[z] =  (alpha << 24) | (0 << 16) | (0 << 8) | 0;
-//					} else if (color == 0) {
-//						this.argb[z] =  (alpha << 24) | (255 << 16) | (255 << 8) | 255;
-//					}
-//				}
-//				
-
 			}
 		}
-//		for (int[] obj : path) {
-//			System.out.println(Arrays.toString(obj));
-//		}
-
 	}
 
 	public List<Path> getPath() {
-//		for (Path path : pathList) {
-//				for (int[] i : path.getEckPunkte()) {
-//						int pos = i[1] * this.width + i[0];
-//						int alpha = (this.argb[pos] >> 24) & 0xff;
-//						this.argb[pos] =  (alpha << 24) | (0 << 16) | (0 << 8) | 0;
-//				}
-//			
-//		}
 		return pathList;
 	}
 
@@ -266,7 +224,7 @@ public class RasterImage {
 			// go-left
 			if (topPixelLeftRed == 255 && leftPixelRed == 0) {
 				lastMove = "GoLeft";
-				 System.out.println("Go left");
+//				 System.out.println("Go left");
 				return new int[] { x - 1, y };
 			} else
 				return move(x, y, srcRed, topPixelLeftRed, topPixelRed, leftPixelRed);
@@ -274,7 +232,7 @@ public class RasterImage {
 			// go-bottom
 			if (srcRed == 0 && leftPixelRed == 255) {
 				lastMove = "GoBottom";
-				System.out.println("Go bottom");
+//				System.out.println("Go bottom");
 				return new int[] { x, y + 1 };
 			} else
 				return move(x, y, srcRed, topPixelLeftRed, topPixelRed, leftPixelRed);
@@ -282,7 +240,7 @@ public class RasterImage {
 			// go-top
 			if (topPixelLeftRed == 0 && topPixelRed == 255) {
 				lastMove = "GoTop";
-				System.out.println("Go top");
+//				System.out.println("Go top");
 				return new int[] { x, y - 1 };
 			} else
 				return move(x, y, srcRed, topPixelLeftRed, topPixelRed, leftPixelRed);
@@ -290,7 +248,7 @@ public class RasterImage {
 			// go-right
 			if (topPixelRed == 0 && srcRed == 255) {
 				lastMove = "GoRight";
-				System.out.println("Go right");
+//				System.out.println("Go right");
 				return new int[] { x + 1, y };
 			} else
 				return move(x, y, srcRed, topPixelLeftRed, topPixelRed, leftPixelRed);
@@ -303,28 +261,28 @@ public class RasterImage {
 		// go-top
 		if (topPixelLeftRed == 0 && topPixelRed == 255) {
 			lastMove = "GoTop";
-			System.out.println("Go top");
+//			System.out.println("Go top");
 			return new int[] { x, y - 1 };
 		}
 
 		// go-bottom
 		if (srcRed == 0 && leftPixelRed == 255) {
 			lastMove = "GoBottom";
-			System.out.println("Go bottom");
+//			System.out.println("Go bottom");
 			return new int[] { x, y + 1 };
 		}
 
 		// go-left
 		if (topPixelLeftRed == 255 && leftPixelRed == 0) {
 			lastMove = "GoLeft";
-			System.out.println("Go left");
+//			System.out.println("Go left");
 			return new int[] { x - 1, y };
 		}
 
 		// go-right
 		if (topPixelRed == 0 && srcRed == 255) {
 			lastMove = "GoRight";
-			System.out.println("Go right");
+//			System.out.println("Go right");
 			return new int[] { x + 1, y };
 		}
 		return new int[] { 0, 0 };

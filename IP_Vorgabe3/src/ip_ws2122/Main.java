@@ -25,7 +25,7 @@ public class Main extends Application {
 		BorderPane root = (BorderPane)loadFXML("ZoomTemplateView.fxml");
 		Scene scene = new Scene(root);
 		primaryStage.setScene(scene);
-		primaryStage.setTitle("Zoom Template - <Your name>"); // TODO: add your name(s)
+		primaryStage.setTitle("Zoom Template - The-Anh Nguyen, Nguyen Xuan Bach Do"); // TODO: add your name(s)
 		primaryStage.show();
 	}
 	
