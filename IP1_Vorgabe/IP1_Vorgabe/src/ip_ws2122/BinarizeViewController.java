@@ -132,7 +132,7 @@ public class BinarizeViewController {
 			break;
 		case CONTOUR:
 			binImg = new RasterImage(origImg);
-			binImg.findContour();
+			binImg.findContour("outer");
 			break;
 //		case FLOODFILL_DFS:
 //			binImg = new RasterImage(origImg);

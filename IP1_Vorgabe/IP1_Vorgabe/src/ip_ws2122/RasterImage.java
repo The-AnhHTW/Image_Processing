@@ -32,6 +32,8 @@ public class RasterImage {
 
 	private static final int gray = 0xffa0a0a0;
 	private String lastMove = "";
+	private static List<List<int[]>> pathList = new ArrayList<List<int[]>>();
+	private static List<String> typeOfPaths = new ArrayList<String>();
 
 	private static List<Integer[]> colors = new ArrayList<Integer[]>() {
 		{
@@ -187,7 +189,7 @@ public class RasterImage {
 		return newThreshold;
 	}
 
-	public void findContour() {
+	public void findContour(String type) {
 		List<int[]> path = new ArrayList<int[]>();
 		boolean firstFound = true;
 		for (int i = 0; i < this.argb.length; i++) {
@@ -210,24 +212,54 @@ public class RasterImage {
 						path.add(possibleEdgePoint);
 					}					
 				}
-				List<Integer> pixelboudaries = new ArrayList<Integer>();
-				//Alle Pixel im Innern invertieren
-				for (int[] obj : path) {
-					pixelboudaries.add(obj[1]*this.width + obj[0]);
-				}
-				Collections.sort(pixelboudaries);
-				int[] range = new int[] {pixelboudaries.get(0), pixelboudaries.get(pixelboudaries.size()-1)};
-				for (int z = range[0]; z <= range[1]; z++) {
-					int currentpixel= this.argb[z];
-					int alpha = (currentpixel >> 24) & 0xff;
-					int color = (currentpixel >> 16) & 0xff;
-					if (color == 255) {
-						this.argb[z] =  (alpha << 24) | (0 << 16) | (0 << 8) | 0;
-					} else if (color == 0) {
-						this.argb[z] =  (alpha << 24) | (255 << 16) | (255 << 8) | 255;
+				
+				for(int j=0; j < path.size(); i++) {
+					int[] current = path.get(j);
+					int[] next;
+					
+					if(j == path.size()) {
+						break;
+					}else {
+						next = path.get(j+1);
 					}
+					
+					if(next[1] != current[1]) {
+						for(int l=current[0]; l <= this.width; l++) {
+							int index = (current[1])* this.width + l;
+							int rowArgb = this.argb[index];
+							int red = (rowArgb >> 16) & 0xff;
+							int alpha = (rowArgb>> 24) & 0xff;
+							int color =  red== 255 ? 0: 255;
+							this.argb[index] =  (alpha << 24) | (color << 16) | (color << 8) | color;
+						}
+					}
+					
+				}
+				pathList.add(path);
+				typeOfPaths.add(type);
+				if(type == "outer") {
+					this.findContour("inner");
 				}
 				
+				
+//				List<Integer> pixelboudaries = new ArrayList<Integer>();
+//				//Alle Pixel im Innern invertieren
+//				for (int[] obj : path) {
+//					pixelboudaries.add(obj[1]*this.width + obj[0]);
+//				}
+//				Collections.sort(pixelboudaries);
+//				int[] range = new int[] {pixelboudaries.get(0), pixelboudaries.get(pixelboudaries.size()-1)};
+//				for (int z = range[0]; z <= range[1]; z++) {
+//					int currentpixel= this.argb[z];
+//					int alpha = (currentpixel >> 24) & 0xff;
+//					int color = (currentpixel >> 16) & 0xff;
+//					if (color == 255) {
+//						this.argb[z] =  (alpha << 24) | (0 << 16) | (0 << 8) | 0;
+//					} else if (color == 0) {
+//						this.argb[z] =  (alpha << 24) | (255 << 16) | (255 << 8) | 255;
+//					}
+//				}
+//				
 				
 			}
 		}
@@ -247,27 +279,27 @@ public class RasterImage {
 		int topPixel = (y + 1) * this.width + (x);
 		int leftPixel = (y) * this.width + (x - 1);
 
-		// Behandle Rand wie weißen Pixel
-		if (pos > this.argb.length-1 || pos < 0) {
+		// Behandle Rand wie weiï¿½en Pixel
+		if (pos > this.argb.length - 1 || pos < 0) {
 			srcRed = 255;
 		} else {
 			int currentArgb = this.argb[pos];
 			srcRed = (currentArgb >> 16) & 0xff;
 		}
 
-		if (topPixelLeft > this.argb.length-1 || topPixelLeft < 0) {
+		if (topPixelLeft > this.argb.length - 1 || topPixelLeft < 0) {
 			topPixelLeftRed = 255;
 		} else {
 			int topPixelLeftArgb = this.argb[topPixelLeft];
 			topPixelLeftRed = (topPixelLeftArgb >> 16) & 0xff;
 		}
-		if (topPixel > this.argb.length-1 || topPixel < 0) {
+		if (topPixel > this.argb.length - 1 || topPixel < 0) {
 			topPixelRed = 255;
 		} else {
 			int topPixelArgb = this.argb[topPixel];
 			topPixelRed = (topPixelArgb >> 16) & 0xff;
 		}
-		if (leftPixel > this.argb.length-1 || leftPixel < 0) {
+		if (leftPixel > this.argb.length - 1 || leftPixel < 0) {
 			leftPixelRed = 255;
 		} else {
 			int leftPixelArgb = this.argb[leftPixel];
