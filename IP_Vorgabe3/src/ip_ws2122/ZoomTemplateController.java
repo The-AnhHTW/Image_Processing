@@ -26,8 +26,9 @@ import javafx.stage.FileChooser;
 
 public class ZoomTemplateController {
 	private static List<Path> paths;
-	private static List<List<Vektor2d>> svgPaths = new ArrayList<List<Vektor2d>>();
-	private static final String initialFileName = "klein.png";
+	private static List<List<Vektor2d>> straightPaths = new ArrayList<List<Vektor2d>>();
+	private static List<List<Vektor2d>> possibleSegments = new ArrayList<List<Vektor2d>>();
+	private static final String initialFileName = "head.png";
 	private static File fileOpenPath = new File(".");
 	private static final double maxZoom = 50.0;
 	private static final int maxZoomedImageDimension = 4000;
@@ -75,6 +76,7 @@ public class ZoomTemplateController {
 			image = new RasterImage(selectedFile);
 			image.setToView(imageView);
 			paths.clear();
+			straightPaths.clear();
 			resetZoom();
 			processImage();
 		}
@@ -107,12 +109,8 @@ public class ZoomTemplateController {
 		paths = binImg.getPath();
 		origImg.setToView(imageView);
 		markPolygonsFromPath();
+//		transformStraightPathsToAllowedSegments();
 		drawOverlay();
-		for (List<Vektor2d> subpath : svgPaths) {
-			for (Vektor2d coordinate : subpath) {
-				System.out.println("x:" + coordinate.x + " || y:" + coordinate.y);
-			}
-		}
 
 	}
 
@@ -125,7 +123,7 @@ public class ZoomTemplateController {
 			Vektor2d c1 = new Vektor2d(0, 0);
 
 			// Pivot Element ist das Element, das wir gerade betrachten
-			Vektor2d pivotElement = pathCoordinates.get(0);
+			Vektor2d pivotElement = new Vektor2d(pathCoordinates.get(0).x, pathCoordinates.get(1).y, true, 0);
 			subPath.add(pivotElement);
 
 			Set<String> directions = new HashSet<String>();
@@ -144,7 +142,7 @@ public class ZoomTemplateController {
 						pivotElement = previousAnalyzed;
 					}
 					directions.clear();
-					subPath.add(pivotElement);
+					subPath.add(new Vektor2d(pivotElement.x, pivotElement.y, true, i));
 					c0.x = 0;
 					c0.y = 0;
 					c1.x = 0;
@@ -152,11 +150,84 @@ public class ZoomTemplateController {
 					continue;
 
 				}
+				subPath.add(pivotElement);
 				updateConstraints(vItoVk, c0, c1);
 
 			}
-			svgPaths.add(subPath);
+			straightPaths.add(subPath);
 		}
+	}
+
+	private void transformStraightPathsToAllowedSegments() {
+
+		for (List<Vektor2d> straightPath : straightPaths) {
+
+//			Vektor2d currentPivot = straightPath.get(0);
+
+			List<Vektor2d> currentPivotList = straightPath.stream().filter(ele -> ele.pivot)
+					.collect(Collectors.toList());
+
+			List<Vektor2d> segmentForPath = new ArrayList<Vektor2d>();
+			
+			for (int index = 0; index < currentPivotList.size(); index++) {
+				Vektor2d currentPivot = currentPivotList.get(index);
+				int nextPivotIndex = index++;
+				if (nextPivotIndex == currentPivotList.size()) {
+					nextPivotIndex = 0;
+				}
+				Vektor2d nextPivot = currentPivotList.get(nextPivotIndex);
+
+				int previousIIndex = 0;
+				int nextJIndex = 0;
+				if (currentPivot.indexOfPivot - 1 < 0) {
+					previousIIndex = straightPath.get(straightPath.size() - 1).indexOfPivot;
+				} else {
+					previousIIndex = currentPivot.indexOfPivot - 1;
+				}
+
+				if (nextPivot.indexOfPivot + 1 > straightPath.size() - 1) {
+					nextJIndex = 0;
+				} else {
+					nextJIndex = nextPivot.indexOfPivot + 1;
+				}
+
+				Vektor2d previousI = straightPath.get(previousIIndex);
+				Vektor2d nextJ = straightPath.get(nextJIndex);
+				Vektor2d direction = new Vektor2d(nextJ.x - previousI.x, nextJ.y - previousI.y);
+				if (checkCyclus(currentPivot.indexOfPivot, nextPivot.indexOfPivot, straightPath.size())
+						&& !isNotStraightPath(direction, previousI, nextJ)) {
+					segmentForPath.add(previousI);
+					segmentForPath.add(nextJ);
+				}else {
+					segmentForPath.add(currentPivot);
+					segmentForPath.add(nextPivot);
+				}
+			}
+			possibleSegments.add(segmentForPath);
+
+		}
+
+	}
+
+	private boolean checkCyclus(int i, int j, int listSize) {
+		int number = 0;
+		if (i <= j) {
+			number = j - 1;
+		} else if (j < i) {
+			number = j - 1 + listSize;
+		}
+
+		return number <= listSize - 3;
+	}
+
+	private int getIndexByProperty(List<Vektor2d> straightPath, int actualPosition) {
+		for (int i = 0; i < straightPath.size(); i++) {
+			Vektor2d pivot = straightPath.get(i);
+			if (pivot != null && pivot.indexOfPivot > actualPosition) {
+				return i;
+			}
+		}
+		return -1;// not there is list
 	}
 
 	private boolean isNotStraightPath(Vektor2d direction, Vektor2d c0, Vektor2d c1) {
@@ -167,42 +238,45 @@ public class ZoomTemplateController {
 	}
 
 	private void updateConstraints(Vektor2d a, Vektor2d c0, Vektor2d c1) {
-		if (a.x <= 1 && a.y <= 1)
+		if (Math.abs(a.x) <= 1 && Math.abs(a.y) <= 1)
 			return;
 
 		Vektor2d d0 = new Vektor2d(0, 0);
 		Vektor2d d1 = new Vektor2d(0, 0);
 
 		if (a.y >= 0 && (a.y > 0 || a.x < 0)) {
-			d0.x = a.x + 1;
+			d0.setX(a.x + 1);
 		} else {
-			d0.x = a.x - 1;
+			d0.setX(a.x - 1);
 		}
 
 		if (a.x <= 0 && (a.x < 0 || a.y < 0)) {
-			d0.y = a.y + 1;
+			d0.setY(a.y + 1);
 		} else {
-			d0.y = a.y - 1;
+			d0.setY(a.y - 1);
+		}
+
+		if (Vektor2d.crossProduct(c0, d0) >= 0) {
+			c0.setX(d0.getX());
+			c0.setY(d0.getY());
 		}
 
 		// c1
 		if (a.y <= 0 && (a.y < 0 || a.x < 0)) {
-			d1.x = a.x + 1;
+			d1.setX(a.x + 1);
 		} else {
-			d1.x = a.x - 1;
+			d1.setX(a.x - 1);
 		}
 		// c1
 		if (a.x >= 0 && (a.x > 0 || a.y < 0)) {
-			d1.y = a.x + 1;
+			d1.setY(a.x + 1);
 		} else {
-			d1.y = a.x - 1;
+			d1.setY(a.y - 1);
 		}
 
-		if (Vektor2d.crossProduct(c0, d0) >= 0) {
-			c0 = d0;
-		}
 		if (Vektor2d.crossProduct(c1, d1) >= 0) {
-			c1 = d1;
+			c1.setX(d1.getX());
+			c1.setY(d1.getY());
 		}
 
 	}
@@ -213,9 +287,9 @@ public class ZoomTemplateController {
 		} else if (startpoint.x > endpoint.x) {
 			return "LEFT";
 		} else if (startpoint.y < endpoint.y) {
-			return "TOP";
-		} else if (startpoint.y > endpoint.y) {
 			return "BOTTOM";
+		} else if (startpoint.y > endpoint.y) {
+			return "TOP";
 		}
 
 		throw new Error("CONDITIONS ARE NOT SUFFICIENT?");
@@ -258,10 +332,21 @@ public class ZoomTemplateController {
 		// countours
 		// drawPath(paths);
 
-		List<Path> convertedSvgPaths = svgPaths.stream().map(vektorPath -> new Path(
-				vektorPath.stream().map(vektor -> new int[] { vektor.x, vektor.y }).collect(Collectors.toList()), false,
-				false)).collect(Collectors.toList());
+		List<Path> convertedSvgPaths = straightPaths.stream()
+				.map(vektorPath -> new Path(
+						vektorPath.stream().filter(element -> element.pivot)
+								.map(vektor -> new int[] { vektor.x, vektor.y }).collect(Collectors.toList()),
+						false, false))
+				.collect(Collectors.toList());
 		drawPath(convertedSvgPaths);
+		
+//		List<Path> convertedSvgPaths = possibleSegments.stream()
+//				.map(vektorPath -> new Path(
+//						vektorPath.stream().filter(element -> element.pivot)
+//								.map(vektor -> new int[] { vektor.x, vektor.y }).collect(Collectors.toList()),
+//						false, false))
+//				.collect(Collectors.toList());
+//		drawPath(convertedSvgPaths);
 
 		// ATTENTION: JavaFX throws an exception if zoom is too high
 
