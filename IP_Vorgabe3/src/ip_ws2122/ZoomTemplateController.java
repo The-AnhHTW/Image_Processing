@@ -28,7 +28,7 @@ public class ZoomTemplateController {
 	private static List<Path> paths;
 	private static List<List<Vektor2d>> straightPaths = new ArrayList<List<Vektor2d>>();
 	private static List<List<Vektor2d>> possibleSegments = new ArrayList<List<Vektor2d>>();
-	private static final String initialFileName = "head.png";
+	private static final String initialFileName = "klein.png";
 	private static File fileOpenPath = new File(".");
 	private static final double maxZoom = 50.0;
 	private static final int maxZoomedImageDimension = 4000;
@@ -151,7 +151,7 @@ public class ZoomTemplateController {
 					continue;
 
 				}
-				subPath.add(pivotElement);
+				subPath.add(toBeAnalyzed);
 				updateConstraints(vItoVk, c0, c1);
 
 			}
@@ -204,6 +204,8 @@ public class ZoomTemplateController {
 					segmentForPath.add(nextPivot);
 				}
 			}
+			
+			
 			possibleSegments.add(segmentForPath);
 
 		}
