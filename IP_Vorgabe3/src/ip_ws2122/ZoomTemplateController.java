@@ -77,6 +77,7 @@ public class ZoomTemplateController {
 			image.setToView(imageView);
 			paths.clear();
 			straightPaths.clear();
+			possibleSegments.clear();
 			resetZoom();
 			processImage();
 		}
@@ -109,7 +110,7 @@ public class ZoomTemplateController {
 		paths = binImg.getPath();
 		origImg.setToView(imageView);
 		markPolygonsFromPath();
-//		transformStraightPathsToAllowedSegments();
+		transformStraightPathsToAllowedSegments();
 		drawOverlay();
 
 	}
@@ -171,8 +172,8 @@ public class ZoomTemplateController {
 			
 			for (int index = 0; index < currentPivotList.size(); index++) {
 				Vektor2d currentPivot = currentPivotList.get(index);
-				int nextPivotIndex = index++;
-				if (nextPivotIndex == currentPivotList.size()) {
+				int nextPivotIndex = index+1;
+				if (nextPivotIndex > currentPivotList.size()-1) {
 					nextPivotIndex = 0;
 				}
 				Vektor2d nextPivot = currentPivotList.get(nextPivotIndex);
@@ -332,21 +333,21 @@ public class ZoomTemplateController {
 		// countours
 		// drawPath(paths);
 
-		List<Path> convertedSvgPaths = straightPaths.stream()
-				.map(vektorPath -> new Path(
-						vektorPath.stream().filter(element -> element.pivot)
-								.map(vektor -> new int[] { vektor.x, vektor.y }).collect(Collectors.toList()),
-						false, false))
-				.collect(Collectors.toList());
-		drawPath(convertedSvgPaths);
-		
-//		List<Path> convertedSvgPaths = possibleSegments.stream()
+//		List<Path> convertedSvgPaths = straightPaths.stream()
 //				.map(vektorPath -> new Path(
 //						vektorPath.stream().filter(element -> element.pivot)
 //								.map(vektor -> new int[] { vektor.x, vektor.y }).collect(Collectors.toList()),
 //						false, false))
 //				.collect(Collectors.toList());
 //		drawPath(convertedSvgPaths);
+		
+		List<Path> convertedSvgPaths = possibleSegments.stream()
+				.map(vektorPath -> new Path(
+						vektorPath.stream().filter(element -> element.pivot)
+								.map(vektor -> new int[] { vektor.x, vektor.y }).collect(Collectors.toList()),
+						false, false))
+				.collect(Collectors.toList());
+		drawPath(convertedSvgPaths);
 
 		// ATTENTION: JavaFX throws an exception if zoom is too high
 
