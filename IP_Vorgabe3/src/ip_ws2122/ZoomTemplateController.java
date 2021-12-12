@@ -180,9 +180,9 @@ public class ZoomTemplateController {
 		}
 
 		if (a.x <= 0 && (a.x < 0 || a.y < 0)) {
-			d0.y = a.x + 1;
+			d0.y = a.y + 1;
 		} else {
-			d0.y = a.x - 1;
+			d0.y = a.y - 1;
 		}
 
 		// c1
