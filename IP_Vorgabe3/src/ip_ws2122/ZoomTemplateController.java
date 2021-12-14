@@ -28,7 +28,7 @@ public class ZoomTemplateController {
 	private static List<Path> paths;
 	private static List<List<Vektor2d>> straightPaths = new ArrayList<List<Vektor2d>>();
 	private static List<List<Vektor2d>> possibleSegments = new ArrayList<List<Vektor2d>>();
-	private static final String initialFileName = "klein.png";
+	private static final String initialFileName = "head.png";
 	private static File fileOpenPath = new File(".");
 	private static final double maxZoom = 50.0;
 	private static final int maxZoomedImageDimension = 4000;
@@ -133,7 +133,7 @@ public class ZoomTemplateController {
 				Vektor2d previousAnalyzed = pathCoordinates.get(i - 1);
 				directions.add(determineDirectionFromTwoPoints(previousAnalyzed, toBeAnalyzed));
 				Vektor2d vItoVk = new Vektor2d(toBeAnalyzed.x - pivotElement.x, toBeAnalyzed.y - pivotElement.y);
-				boolean toManyDirections = directions.size() > 3;
+				boolean toManyDirections = directions.size() > 2;
 				boolean isNotStraight = isNotStraightPath(vItoVk, c0, c1);
 				boolean isLastElement = i == pathCoordinates.size() - 1;
 				if (toManyDirections || isNotStraight || isLastElement) {
@@ -244,42 +244,42 @@ public class ZoomTemplateController {
 		if (Math.abs(a.x) <= 1 && Math.abs(a.y) <= 1)
 			return;
 
-		Vektor2d d0 = new Vektor2d(0, 0);
-		Vektor2d d1 = new Vektor2d(0, 0);
+		Vektor2d d = new Vektor2d(0, 0);
+//		Vektor2d d1 = new Vektor2d(0, 0);
 
 		if (a.y >= 0 && (a.y > 0 || a.x < 0)) {
-			d0.setX(a.x + 1);
+			d.setX(a.x + 1);
 		} else {
-			d0.setX(a.x - 1);
+			d.setX(a.x - 1);
 		}
 
 		if (a.x <= 0 && (a.x < 0 || a.y < 0)) {
-			d0.setY(a.y + 1);
+			d.setY(a.y + 1);
 		} else {
-			d0.setY(a.y - 1);
+			d.setY(a.y - 1);
 		}
 
-		if (Vektor2d.crossProduct(c0, d0) >= 0) {
-			c0.setX(d0.getX());
-			c0.setY(d0.getY());
+		if (Vektor2d.crossProduct(c0, d) >= 0) {
+			c0.setX(d.getX());
+			c0.setY(d.getY());
 		}
 
 		// c1
 		if (a.y <= 0 && (a.y < 0 || a.x < 0)) {
-			d1.setX(a.x + 1);
+			d.setX(a.x + 1);
 		} else {
-			d1.setX(a.x - 1);
+			d.setX(a.x - 1);
 		}
 		// c1
 		if (a.x >= 0 && (a.x > 0 || a.y < 0)) {
-			d1.setY(a.x + 1);
+			d.setY(a.x + 1);
 		} else {
-			d1.setY(a.y - 1);
+			d.setY(a.y - 1);
 		}
 
-		if (Vektor2d.crossProduct(c1, d1) >= 0) {
-			c1.setX(d1.getX());
-			c1.setY(d1.getY());
+		if (Vektor2d.crossProduct(c1, d) >= 0) {
+			c1.setX(d.getX());
+			c1.setY(d.getY());
 		}
 
 	}
@@ -310,6 +310,7 @@ public class ZoomTemplateController {
 		overlayCanvas.setHeight(zoomedHeight);
 		GraphicsContext gc = overlayCanvas.getGraphicsContext2D();
 		gc.clearRect(0, 0, overlayCanvas.getWidth(), overlayCanvas.getHeight());
+		gc.setLineWidth(3);
 		if (paths != null) {
 
 			for (Path p : paths) {
