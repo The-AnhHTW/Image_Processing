@@ -124,7 +124,7 @@ public class ZoomTemplateController {
 			Vektor2d c1 = new Vektor2d(0, 0);
 
 			// Pivot Element ist das Element, das wir gerade betrachten
-			Vektor2d pivotElement = new Vektor2d(pathCoordinates.get(0).x, pathCoordinates.get(1).y, true, 0);
+			Vektor2d pivotElement = new Vektor2d(pathCoordinates.get(0).x, pathCoordinates.get(0).y, true, 0);
 			subPath.add(pivotElement);
 
 			Set<String> directions = new HashSet<String>();
@@ -133,7 +133,7 @@ public class ZoomTemplateController {
 				Vektor2d previousAnalyzed = pathCoordinates.get(i - 1);
 				directions.add(determineDirectionFromTwoPoints(previousAnalyzed, toBeAnalyzed));
 				Vektor2d vItoVk = new Vektor2d(toBeAnalyzed.x - pivotElement.x, toBeAnalyzed.y - pivotElement.y);
-				boolean toManyDirections = directions.size() > 2;
+				boolean toManyDirections = directions.size() > 3;
 				boolean isNotStraight = isNotStraightPath(vItoVk, c0, c1);
 				boolean isLastElement = i == pathCoordinates.size() - 1;
 				if (toManyDirections || isNotStraight || isLastElement) {
@@ -149,10 +149,9 @@ public class ZoomTemplateController {
 					c1.x = 0;
 					c1.y = 0;
 					continue;
-
 				}
-				subPath.add(toBeAnalyzed);
 				updateConstraints(vItoVk, c0, c1);
+				subPath.add(toBeAnalyzed);
 
 			}
 			straightPaths.add(subPath);
@@ -162,9 +161,6 @@ public class ZoomTemplateController {
 	private void transformStraightPathsToAllowedSegments() {
 
 		for (List<Vektor2d> straightPath : straightPaths) {
-
-//			Vektor2d currentPivot = straightPath.get(0);
-
 			List<Vektor2d> currentPivotList = straightPath.stream().filter(ele -> ele.pivot)
 					.collect(Collectors.toList());
 
@@ -172,29 +168,21 @@ public class ZoomTemplateController {
 			
 			for (int index = 0; index < currentPivotList.size(); index++) {
 				Vektor2d currentPivot = currentPivotList.get(index);
-				int nextPivotIndex = index+1;
-				if (nextPivotIndex > currentPivotList.size()-1) {
-					nextPivotIndex = 0;
-				}
+				
+				int nextPivotIndex = index + 1 >= currentPivotList.size() ? 0: index +1;
+				
 				Vektor2d nextPivot = currentPivotList.get(nextPivotIndex);
-
-				int previousIIndex = 0;
-				int nextJIndex = 0;
-				if (currentPivot.indexOfPivot - 1 < 0) {
-					previousIIndex = straightPath.get(straightPath.size() - 1).indexOfPivot;
-				} else {
-					previousIIndex = currentPivot.indexOfPivot - 1;
-				}
-
-				if (nextPivot.indexOfPivot + 1 > straightPath.size() - 1) {
-					nextJIndex = 0;
-				} else {
-					nextJIndex = nextPivot.indexOfPivot + 1;
-				}
-
-				Vektor2d previousI = straightPath.get(previousIIndex);
-				Vektor2d nextJ = straightPath.get(nextJIndex);
+				
+				int previousIndex = currentPivot.indexOfPivot - 1 < 0 ? 
+						(straightPath.size() -1): currentPivot.indexOfPivot -1;
+				
+				int nextIndex = nextPivot.indexOfPivot + 1 >= straightPath.size() ?
+						0 : nextPivot.indexOfPivot +1;
+				
+				Vektor2d previousI = straightPath.get(previousIndex);
+				Vektor2d nextJ = straightPath.get(nextIndex);
 				Vektor2d direction = new Vektor2d(nextJ.x - previousI.x, nextJ.y - previousI.y);
+				
 				if (checkCyclus(currentPivot.indexOfPivot, nextPivot.indexOfPivot, straightPath.size())
 						&& !isNotStraightPath(direction, previousI, nextJ)) {
 					segmentForPath.add(previousI);
@@ -272,12 +260,12 @@ public class ZoomTemplateController {
 		}
 		// c1
 		if (a.x >= 0 && (a.x > 0 || a.y < 0)) {
-			d.setY(a.x + 1);
+			d.setY(a.y + 1);
 		} else {
 			d.setY(a.y - 1);
 		}
 
-		if (Vektor2d.crossProduct(c1, d) >= 0) {
+		if (Vektor2d.crossProduct(c1, d) <= 0) {
 			c1.setX(d.getX());
 			c1.setY(d.getY());
 		}
